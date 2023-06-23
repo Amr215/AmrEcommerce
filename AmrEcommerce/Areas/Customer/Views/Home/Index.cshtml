@@ -1,0 +1,49 @@
+﻿@using AmrEcommerce.Models;
+@using X.PagedList.Mvc.Common
+@using X.PagedList.Mvc.Core
+@model X.PagedList.IPagedList<Products>
+@{ ViewData["Title"] = "Home Page"; }
+<br />
+<br />
+<div class="row">
+    @foreach (var product in Model)
+    {
+<div class="col-md-4">
+    <div class="card">
+        @*<div class="card-header">
+            <h4 class="my-0 font-weight-normal">
+                <label style="font-size: 23px;color: steelblue">@product.Name</label>
+            </h4>
+        </div>*@
+        <img src="~/@product.Image" alt="Card Image" class="card-img-top" style="height: 300px;" />
+        <div class="card-body">
+            @*<div class="d-flex justify-content-between align-items-center">*@
+            <h5 class="card-title">@product.Name</h5>
+            <h6 class="card-subtitle mb-2 text-muted">@product.Price</h6>
+            @*<div class="btn-group">
+                <label style="font-size: 20px;color: #a51313"><b>Price : @product.Price</b></label>
+            </div>*@
+            <a asp-action="Detail" asp-controller="Home" asp-route-id="@product.Id" class="btn btn-primary">Deatils</a>
+            @*</div>*@
+        </div>
+    </div>
+</div>}
+</div>
+<div>
+    <br />
+    @*@Html.PagedListPager(Model, c => Href("~/Customer/Home/Index?page=" + c), PagedListRenderOptionsBase.PageNumbersOnly)*@
+    @Html.PagedListPager(Model, c => Href("~/Customer/Home/Index?page=" + c), new PagedListRenderOptionsBase
+{
+
+    PageClasses = new string[] { "page-link" },
+    UlElementClasses = new string[] { "pagination justify-content-end" },
+    LiElementClasses = new string[] { "page-item" },
+    //DisplayItemSliceAndTotal = true,
+    DisplayEllipsesWhenNotShowingAllPageNumbers = true,
+    DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+    DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded
+})
+
+</div>
+
+

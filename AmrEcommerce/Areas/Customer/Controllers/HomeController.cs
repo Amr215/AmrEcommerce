@@ -1,0 +1,152 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using AmrEcommerce.Data;
+using AmrEcommerce.Models;
+using AmrEcommerce.Utility;
+using X.PagedList;
+
+namespace OnlineShop.Controllers
+{
+    [Area("Customer")]
+
+    public class HomeController : Controller
+    {
+        private ApplicationDbContext _db;
+
+        public HomeController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+        //public async Task<ActionResult> Index(int? page)
+        //{
+        //    var products = await _db.Products.Include(c => c.ProductTypes).Include(c => c.SpecialTag).ToListAsync();
+        //    var pagedProducts = products.ToPagedList(pageNumber: page ?? 1, pageSize: 6);
+        //    return View(pagedProducts);
+        //}
+        public ActionResult Index(int? page)
+        {
+            return View(_db.Products.Include(navigationPropertyPath: c => c.ProductTypes).Include(navigationPropertyPath: c => c.SpecialTag).ToList().ToPagedList(pageNumber: page ?? 1, pageSize: 6));
+        }
+
+        public ActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
+        //GET product detail acation method
+
+        public ActionResult Detail(int? id)
+        {
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = _db.Products.Include(c => c.ProductTypes).FirstOrDefault(c => c.Id == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+
+        //POST product detail acation method
+        [HttpPost]
+        [ActionName("Detail")]
+        public ActionResult ProductDetail(int? id)
+        {
+            List<Products> products = new List<Products>();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = _db.Products.Include(c => c.ProductTypes).FirstOrDefault(c => c.Id == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            products = HttpContext.Session.Get<List<Products>>("products");
+            if (products == null)
+            {
+                products = new List<Products>();
+            }
+            products.Add(product);
+            HttpContext.Session.Set("products", products);
+            return RedirectToAction(nameof(Index));
+        }
+        //GET Remove action methdo
+        [ActionName("Remove")]
+        public ActionResult RemoveToCart(int? id)
+        {
+            List<Products> products = HttpContext.Session.Get<List<Products>>("products");
+            if (products != null)
+            {
+                var product = products.FirstOrDefault(c => c.Id == id);
+                if (product != null)
+                {
+                    products.Remove(product);
+                    HttpContext.Session.Set("products", products);
+                }
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+
+        public ActionResult Remove(int? id)
+        {
+            List<Products> products = HttpContext.Session.Get<List<Products>>("products");
+            if (products != null)
+            {
+                var product = products.FirstOrDefault(c => c.Id == id);
+                if (product != null)
+                {
+                    products.Remove(product);
+                    HttpContext.Session.Set("products", products);
+                }
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        //GET product Cart action method
+
+        public ActionResult Cart()
+        {
+            List<Products> products = HttpContext.Session.Get<List<Products>>("products");
+            if (products == null)
+            {
+                products = new List<Products>();
+            }
+            return View(products);
+        }
+
+        public ActionResult Search(string term)
+        {
+            var result = SearchP(term).ToPagedList(pageNumber: 1, pageSize: 6);
+            return View("Index", result);
+        }
+
+        public List<Products> SearchP(string term)
+        {
+            var result = _db.Products.Include(a => a.ProductTypes).Include(b=>b.SpecialTag)
+                .Where(c => c.Name.Contains(term)
+                        || c.SpecialTag.Name.Contains(term)
+                        || c.ProductTypes.ProductType.Contains(term)).ToList();
+
+            return result;
+        }
+
+    }
+}
